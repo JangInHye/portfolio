@@ -15,6 +15,8 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
     int curStaggerCount = 0;     // 흐트러진 상태라면 그 정도
     bool isStagger = false;        // 이번 턴에 흐트러진 것인지 체크
 
+    public int CurSpeed {  get { return curSpeed; }  }
+
     public void Init()
     {
         characterData = new CharacterData();
@@ -26,8 +28,10 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
     // 이번 턴 세팅
     public void StartTurn()
     {
+        // 속도 관련 버프나 디버프 있다면 여기서 처리
         int rand = Random.Range(-1, 2);
-        curSpeed = characterData.mySpeed + rand;
+        curSpeed = characterData.mySpeed + rand;        // 속도 랜덤
+
         isStagger = false;
     }
 
@@ -57,6 +61,7 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
 
     public List<SkillData> GetSkillData()
     {
+        // 강제로 스킬을 띄워야 하는 경우가 있으면 여기서 처리
         return characterData.GetSkillData();
     }
 }

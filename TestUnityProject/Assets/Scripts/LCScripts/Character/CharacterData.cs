@@ -67,24 +67,23 @@ public class CharacterData : MonoBehaviour
     {
         int result = damageInfo.Damage;
 
-        result = (int)(result                                                              // 데미지
+        result = (int)(result                                                   // 데미지
             * attackTypeTolerance[(int)damageInfo.AttackType]        // 공격 타입 내성
             * sinAffinitiesTolerance[(int)damageInfo.SinAffinities]      // 공격 속성 내성
-            * BattleInfo.StaggerAttackRatio[stagger]);                                           // 흐트러짐 여부
+            * BattleInfo.StaggerAttackRatio[stagger]);                    // 흐트러짐 여부
 
         return result;
     }
 
     /// <summary>
-    /// 랜덤하게 스킬 2개 가져오기
+    /// 랜덤하게 스킬 가져오기
     /// </summary>
     /// <returns></returns>
-    public List<SkillData> GetSkillData()
+    public List<SkillData> GetSkillData(int count = 2)
     {
         List<SkillData> result = new List<SkillData>();
 
-        // 2개 고정
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < count; i++)
         {
             int rand = Random.Range(0, mySkills.Length);
             result.Add(mySkills[rand]);
