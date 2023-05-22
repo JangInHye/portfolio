@@ -1,0 +1,45 @@
+# ===================================== #
+# Visual Studio / MonoDevelop generated #
+# ===================================== #
+*.svd
+*.userprefs
+TestUnityProject/*.csproj
+*.pidb
+*.suo
+TestUnityProject/*.sln
+*.user
+*.unityproj
+*.booproj
+.vs/
+.vscode/
+.vs/config/
+.idea
+ 
+# ============ #
+# OS generated #
+# ============ #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+.settings/launch.json
+.settings/settings.json
+.gitattributes
+*.orig
+*.orig.meta
+*.cache
+
+
+# ============ #
+#    folder    #
+# ============ #
+TestUnityProject/Library/*
+TestUnityProject/UserSettings/
+TestUnityProject/Logs/
+TestUnityProject/Temp/
+
