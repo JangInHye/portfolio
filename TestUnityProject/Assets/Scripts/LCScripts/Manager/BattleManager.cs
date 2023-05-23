@@ -133,16 +133,13 @@ public class BattleManager : MonoBehaviour
     {
         if (eBattleState != EBattleState.WaitCommand) return;
 
-        AttackInfo info = new AttackInfo();
-        info.Attacker = attacker;
-        info.Victim = victim.Character;
-        info.AttackerSkill = skill;
+        AttackInfo beforeAtkInfo = new AttackInfo();
 
         bool isDuel = false;
         // 적이 공격을 할 경우
         if (victim.Skill != null && victim.Skill.Length > 0)
         {
-            var beforeAtkInfo = GetAttackInfo(victim.Character);
+            beforeAtkInfo = GetAttackInfo(victim.Character);
             if (beforeAtkInfo.Attacker != null)
             {
                 // 같은 속도라면 본인에게 오는 공격만 합 가능
@@ -158,27 +155,19 @@ public class BattleManager : MonoBehaviour
                 }
             }
 
+            // 합 진행
             if (isDuel)
             {
-                // 기존에 합을 진행하던 게 있다면 제거
-                // 적의 공격이라면
-                if (beforeAtkInfo.Attacker == victim.Character)
-                {
-                    attackList.Remove(beforeAtkInfo);
-                }
-                // 
-                else
-                {
-
-                }
-
-                info.VictimSkill = victim.Skill[0];
+                // 기존에 있던 공격 대상을 바꾼다.
+                beforeAtkInfo.Victim = attacker;
+                beforeAtkInfo.VictimSkill = skill;
             }
         }
         // 합을 진행할 경우 낮은 속도 기준으로 공격이 진행된다.
-        info.Speed = isDuel ? Mathf.Min(attacker.CurSpeed, victim.Character.CurSpeed)
+        int speed = isDuel ? Mathf.Min(attacker.CurSpeed, victim.Character.CurSpeed)
                                                : attacker.CurSpeed;
 
+        AddAttackInfo(attacker, victim.Character, skill, speed, beforeAtkInfo.AttackerSkill);
     }
 
     /// <summary>
