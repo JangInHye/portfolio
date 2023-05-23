@@ -1,6 +1,7 @@
 using Battle;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class EnemyBattleData : MonoBehaviour, IBattleFunction
@@ -62,7 +63,11 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
         }
     }
 
-    public List<SkillData> GetSkillData()
+    /// <summary>
+    /// 각 부위별로 1개의 스킬 + 본체 1개 고정
+    /// </summary>
+    /// <returns></returns>
+    public List<SkillBlock> GetSkillData()
     {
         if (isPartDestroy)
         {
@@ -72,16 +77,26 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
             return null;
         }
 
-        List<SkillData> skillDatas = new List<SkillData>();
+        List<SkillBlock> skillDatas = new List<SkillBlock>();
+        SkillBlock sb;
         foreach (var part in partsArray)
         {
             // 파괴된 부위는 전투 불가능
-            if(part.IsDead) { continue; }
+            if (part.IsDead)
+            {
+                // 비어있는 스킬데이터의 경우 부위 공격으로 대체한다.
+                sb = new SkillBlock();
+                sb.Character = part;
+                skillDatas.Add(sb);
+                continue;
+            }
 
-            skillDatas.Add(part.GetSkillData().FirstOrDefault());
+            skillDatas.Add(part.GetSkillData());
         }
         // 마지막 스킬은 본체로 고정
-        skillDatas.Add(new SkillData());
+        sb = new SkillBlock();
+        sb.Character = bodyData;
+        skillDatas.Add(sb);
 
         // 강제로 스킬을 띄워야 하는 경우가 있으면 여기서 처리
 

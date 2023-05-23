@@ -14,7 +14,7 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
     int curStaggerCount = 0;     // 흐트러진 상태라면 그 정도
     bool isStagger = false;        // 이번 턴에 흐트러진 것인지 체크
 
-    public int CurSpeed {  get { return curSpeed; }  }
+    public int CurSpeed { get { return curSpeed; } }
 
     public void Init()
     {
@@ -37,7 +37,7 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
     public void EndTurn()
     {
         // 이번 턴에 흐트러진 것이 아니라면 해제
-        if(isStagger == false)
+        if (isStagger == false)
         {
             curStaggerCount = 0;
         }
@@ -50,7 +50,7 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
 
         // 디버프나 추가 데미지가 있다면 여기서 적용
 
-        if(curHP < characterData.staggerThreshold[staggerIdx])
+        if (curHP < characterData.staggerThreshold[staggerIdx])
         {
             curStaggerCount++;
             staggerIdx++;
@@ -58,12 +58,36 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
         }
     }
 
-    public List<SkillData> GetSkillData()
+    /// <summary>
+    /// 현재 턴에 사용할 스킬 묶음
+    /// </summary>
+    /// <param name="count"></param>
+    /// <returns></returns>
+    public SkillBlock GetSkillData(int count = 2)
     {
-        // 강제로 스킬을 띄워야 하는 경우가 있으면 여기서 처리
-        return characterData.GetSkillData();
+        SkillBlock result = new SkillBlock();
+        result.Skill = new SkillData[count];
+        result.Character = this;
+
+        // 패닉일 경우 공격 불가
+        // 비어있는 스킬데이터의 예외처리 필요
+        if (IsPanic) return result;
+
+        for (int i = 0; i < count; i++)
+        {
+            int rand = Random.Range(0, characterData.SkillCount);
+            result.Skill[i] = characterData.GetSkill(rand);
+        }
+
+        return result;
     }
 
+    /// <summary>
+    /// 사망 체크
+    /// </summary>
     public bool IsDead { get { return curHP <= 0; } }
+    /// <summary>
+    /// 패닉 체크
+    /// </summary>
     public bool IsPanic { get { return curMentality <= BattleInfo.Min_Mentality; } }
 }

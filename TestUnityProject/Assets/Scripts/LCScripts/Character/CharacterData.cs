@@ -10,6 +10,13 @@ public class CharacterData : MonoBehaviour
     public float[] sinAffinitiesTolerance = new float[BattleInfo.Num_Sin];
     // 스킬 데이터
     SkillData[] mySkills;
+    public int SkillCount { get { return mySkills == null ? 0 : mySkills.Length; } }
+    public SkillData GetSkill(int idx)
+    {
+        if (mySkills == null || idx < 0 || mySkills.Length < idx) return new SkillData();
+
+        return mySkills[idx];
+    }
 
     public int mySpeed = 0;        // 속도
     public int myHP = 0;            // 체력
@@ -62,29 +69,12 @@ public class CharacterData : MonoBehaviour
     /// <returns></returns>
     public int GetDamage(AttackInfo damageInfo, int stagger, bool coinSuccess)
     {
-        int result = BattleInfo.Damage(damageInfo.Skill, damageInfo.BeforeDamage, coinSuccess);
+        int result = BattleInfo.Damage(damageInfo.AttackerSkill, damageInfo.BeforeDamage, coinSuccess);
 
         result = (int)(result                                                   // 데미지
-            * attackTypeTolerance[(int)damageInfo.Skill.AttackType]        // 공격 타입 내성
-            * sinAffinitiesTolerance[(int)damageInfo.Skill.SinAffinities]      // 공격 속성 내성
+            * attackTypeTolerance[(int)damageInfo.AttackerSkill.AttackType]        // 공격 타입 내성
+            * sinAffinitiesTolerance[(int)damageInfo.AttackerSkill.SinAffinities]      // 공격 속성 내성
             * BattleInfo.StaggerAttackRatio[stagger]);                    // 흐트러짐 여부
-
-        return result;
-    }
-
-    /// <summary>
-    /// 랜덤하게 스킬 가져오기
-    /// </summary>
-    /// <returns></returns>
-    public List<SkillData> GetSkillData(int count = 2)
-    {
-        List<SkillData> result = new List<SkillData>();
-
-        for (int i = 0; i < count; i++)
-        {
-            int rand = Random.Range(0, mySkills.Length);
-            result.Add(mySkills[rand]);
-        }
 
         return result;
     }

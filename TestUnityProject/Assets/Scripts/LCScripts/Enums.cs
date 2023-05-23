@@ -75,21 +75,25 @@ namespace Battle
     }
 
     /// <summary>
-    /// 데미지 정보
+    /// 공격 정보
     /// </summary>
     public struct AttackInfo
     {
         public CharacterBattleData Attacker;
         public CharacterBattleData Victim;
-        public SkillData Skill;
-        public int BeforeDamage;
-        public int CoinCount;
+        public SkillData AttackerSkill;
+        public SkillData VictimSkill;
+        public int BeforeDamage;              // 이전 데미지 + 추가코인 데미지 계산
+        public int CoinCount;                   // 공격횟수 줄어들 수도 있음.
+        public int Speed;                        // 누구랑 합을 하느냐에 따라 속도 달라짐.
     }
 
+    // 스킬 UI 표기 및 현재 턴의 사용할 수 있는 스킬 세팅
     public struct SkillBlock
     {
         public SkillData[] Skill;
         public CharacterBattleData Character;
+        public bool IsAttacked;         // 공격 명령이 내려졌는 지 체크
     }
 
     interface IBattleFunction
@@ -100,7 +104,6 @@ namespace Battle
         public void EndTurn();
         // 데미지 적용
         public void Damaged(AttackInfo damage, bool coinSuccess, int partIdx = 0);
-        public List<SkillData> GetSkillData();
         public bool IsDead { get { return false; } }
     }
 }
