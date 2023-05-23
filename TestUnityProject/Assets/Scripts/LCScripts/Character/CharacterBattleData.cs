@@ -1,5 +1,4 @@
 using Battle;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -44,10 +43,10 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
         }
     }
 
-    public void Damaged(DamageInfo damage, int partIdx = 0)
+    public void Damaged(AttackInfo damage, bool coinSuccess, int partIdx = 0)
     {
         // 속성 내성 적용
-        curHP -= characterData.GetDamage(damage, staggerIdx);
+        curHP -= characterData.GetDamage(damage, staggerIdx, coinSuccess);
 
         // 디버프나 추가 데미지가 있다면 여기서 적용
 
@@ -64,4 +63,7 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
         // 강제로 스킬을 띄워야 하는 경우가 있으면 여기서 처리
         return characterData.GetSkillData();
     }
+
+    public bool IsDead { get { return curHP <= 0; } }
+    public bool IsPanic { get { return curMentality <= BattleInfo.Min_Mentality; } }
 }

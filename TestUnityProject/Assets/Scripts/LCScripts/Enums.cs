@@ -4,7 +4,7 @@ namespace Battle
 {
     // 공격 타입
     // 참격, 관통, 타격
-    public enum AttackType
+    public enum EAttackType
     {
         Slash = 0,
         Pierce,
@@ -13,7 +13,7 @@ namespace Battle
 
     // 공격 속성
     // 분노 색욕 나태 탐식 우울 오만 질투
-    public enum SinAffinities
+    public enum ESinAffinities
     {
         Wrath = 0,
         Lust,
@@ -22,6 +22,18 @@ namespace Battle
         Gloom,
         Pride,
         Envy,
+    }
+
+    // 전투 상태
+    public enum EBattleState
+    {
+        None,
+        StartTurn,              // 턴 시작
+        WaitCommand,        // 조작 대기
+        StartAttack,            // 공격 시작
+        EndTurn,               // 턴 종료
+        Victory,                 // 승리
+        Defeat,                 // 패배
     }
 
     class BattleInfo
@@ -45,16 +57,39 @@ namespace Battle
         public static int Max_Speed = 7;
         public static int Max_HP = 150;
         public static int Max_Mentality = 45;
+
+        // 코인을 던질 때마다 데미지 추가 계산
+        public static int Damage(SkillData skill, int beforeDamage, bool coinSuccess)
+        {
+            int result = beforeDamage;
+
+            // 코인이 실패할 수록 데미지가 강해지는 경우
+            // ㄴCoinDamage가 이미 음수이기 때문에 문제 없다.
+            int cDamage = coinSuccess ? skill.CoinDamage : skill.CoinDamage;
+
+            // 데미지 증가 버프가 있다면 여기서 처리
+            result += cDamage;
+
+            return result;
+        }
     }
 
     /// <summary>
     /// 데미지 정보
     /// </summary>
-    public struct DamageInfo
+    public struct AttackInfo
     {
-        public AttackType AttackType;
-        public SinAffinities SinAffinities;
-        public int Damage;
+        public CharacterBattleData Attacker;
+        public CharacterBattleData Victim;
+        public SkillData Skill;
+        public int BeforeDamage;
+        public int CoinCount;
+    }
+
+    public struct SkillBlock
+    {
+        public SkillData[] Skill;
+        public CharacterBattleData Character;
     }
 
     interface IBattleFunction
@@ -64,7 +99,8 @@ namespace Battle
         // 턴 종료 시 세팅
         public void EndTurn();
         // 데미지 적용
-        public void Damaged(DamageInfo damage, int partIdx = 0);
+        public void Damaged(AttackInfo damage, bool coinSuccess, int partIdx = 0);
         public List<SkillData> GetSkillData();
+        public bool IsDead { get { return false; } }
     }
 }

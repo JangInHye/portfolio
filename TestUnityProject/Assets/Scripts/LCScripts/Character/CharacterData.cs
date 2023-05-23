@@ -1,9 +1,6 @@
 using Battle;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
-using UnityEngine.TextCore.Text;
 
 public class CharacterData : MonoBehaviour
 {
@@ -63,13 +60,13 @@ public class CharacterData : MonoBehaviour
     /// <param name="damageInfo"></param>
     /// <param name="stagger"></param>
     /// <returns></returns>
-    public int GetDamage(DamageInfo damageInfo, int stagger)
+    public int GetDamage(AttackInfo damageInfo, int stagger, bool coinSuccess)
     {
-        int result = damageInfo.Damage;
+        int result = BattleInfo.Damage(damageInfo.Skill, damageInfo.BeforeDamage, coinSuccess);
 
         result = (int)(result                                                   // 데미지
-            * attackTypeTolerance[(int)damageInfo.AttackType]        // 공격 타입 내성
-            * sinAffinitiesTolerance[(int)damageInfo.SinAffinities]      // 공격 속성 내성
+            * attackTypeTolerance[(int)damageInfo.Skill.AttackType]        // 공격 타입 내성
+            * sinAffinitiesTolerance[(int)damageInfo.Skill.SinAffinities]      // 공격 속성 내성
             * BattleInfo.StaggerAttackRatio[stagger]);                    // 흐트러짐 여부
 
         return result;
