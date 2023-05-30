@@ -63,12 +63,8 @@ namespace Battle
         {
             int result = beforeDamage;
 
-            // 코인이 실패할 수록 데미지가 강해지는 경우
-            // ㄴCoinDamage가 이미 음수이기 때문에 문제 없다.
-            int cDamage = coinSuccess ? skill.CoinDamage : skill.CoinDamage;
-
             // 데미지 증가 버프가 있다면 여기서 처리
-            result += cDamage;
+            result += skill.CoinDamage;
 
             return result;
         }
