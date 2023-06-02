@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 
 namespace Battle
 {
@@ -36,38 +36,28 @@ namespace Battle
         Defeat,                 // 패배
     }
 
-    class BattleInfo
+    // 캐릭터 데이터
+    class CharacterInfo
     {
-        public static int Num_Type = 3;
-        public static int Num_Sin = 7;
-        public static int Num_Stagger = 3;
+        public const int Num_Type = 3;
+        public const int Num_Sin = 7;
+        public const int Num_Stagger = 3;
         public static float[] StaggerHP = new float[] { 0.7f, 0.5f, 0.3f };
         public static float[] StaggerAttackRatio = new float[] { 1.0f, 1.2f, 1.4f, 1.6f };
 
-        public static int Min_DefaultDamage = 7;
-        public static int Min_CoinDamage = 1;
-        public static int Min_CoinCount = 1;
-        public static int Min_Speed = 2;
-        public static int Min_HP = 120;
-        public static int Min_Mentality = -45;
+        public const int Min_DefaultDamage = 7;
+        public const int Min_CoinDamage = 1;
+        public const int Min_CoinCount = 1;
+        public const int Min_Speed = 2;
+        public const int Min_HP = 120;
+        public const int Min_Mentality = -45;
 
-        public static int Max_DefaultDamage = 9;
-        public static int Max_CoinDamage = 4;
-        public static int Max_CoinCount = 5;
-        public static int Max_Speed = 7;
-        public static int Max_HP = 150;
-        public static int Max_Mentality = 45;
-
-        // 코인을 던질 때마다 데미지 추가 계산
-        public static int Damage(SkillData skill, int beforeDamage, bool coinSuccess)
-        {
-            int result = beforeDamage;
-
-            // 데미지 증가 버프가 있다면 여기서 처리
-            result += skill.CoinDamage;
-
-            return result;
-        }
+        public const int Max_DefaultDamage = 9;
+        public const int Max_CoinDamage = 4;
+        public const int Max_CoinCount = 5;
+        public const int Max_Speed = 7;
+        public const int Max_HP = 150;
+        public const int Max_Mentality = 45;
     }
 
     /// <summary>
@@ -92,6 +82,7 @@ namespace Battle
         public bool IsAttacked;         // 공격 명령이 내려졌는 지 체크
     }
 
+    // 전투에 필요한 함수
     interface IBattleFunction
     {
         // 턴 시작 시 세팅
@@ -99,7 +90,7 @@ namespace Battle
         // 턴 종료 시 세팅
         public void EndTurn();
         // 데미지 적용
-        public void Damaged(AttackInfo damage, bool coinSuccess, int partIdx = 0);
+        public void Damaged(AttackInfo damage, int partIdx = 0);
         public bool IsDead { get { return false; } }
     }
 }

@@ -1,26 +1,24 @@
 using Battle;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class EnemyBattleData : MonoBehaviour, IBattleFunction
 {
-    CharacterBattleData[] partsArray;
-    bool isPartDestroy = false;     // 부위파괴
+    private CharacterBattleData[] _partsArray;
+    private bool _isPartDestroy = false;     // 부위파괴
 
     // 본체
-    CharacterBattleData bodyData;
+    private CharacterBattleData _bodyData;
 
     public void Init()
     {
-        bodyData = new CharacterBattleData();
-        bodyData.Init();
+        _bodyData = new CharacterBattleData();
+        _bodyData.Init();
 
         // 2~4개 정도의 부위를 랜덤으로 가짐
         int random = Random.Range(2, 5);
-        partsArray = new CharacterBattleData[random];
-        foreach (var part in partsArray)
+        _partsArray = new CharacterBattleData[random];
+        foreach (var part in _partsArray)
         {
             part.Init();
         }
@@ -28,7 +26,7 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
 
     public void StartTurn()
     {
-        foreach (var part in partsArray)
+        foreach (var part in _partsArray)
         {
             part.StartTurn();
 
@@ -38,7 +36,7 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
 
     public void EndTurn()
     {
-        foreach (var part in partsArray)
+        foreach (var part in _partsArray)
         {
             part.EndTurn();
 
@@ -46,20 +44,20 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
         }
     }
 
-    public void Damaged(AttackInfo damage, bool coinSuccess, int partIdx)
+    public void Damaged(AttackInfo damage, int partIdx)
     {
         // 부위 외에 공격은 본체로 간다.
-        if (partIdx < 0 || partIdx >= partsArray.Length || partsArray[partIdx] == null)
+        if (partIdx < 0 || partIdx >= _partsArray.Length || _partsArray[partIdx] == null)
         {
-            bodyData.Damaged(damage, coinSuccess);
+            _bodyData.Damaged(damage);
             return;
         }
 
-        partsArray[partIdx].Damaged(damage, coinSuccess, partIdx);
+        _partsArray[partIdx].Damaged(damage, partIdx);
         // 부위 파괴
-        if (partsArray[partIdx].IsDead)
+        if (_partsArray[partIdx].IsDead)
         {
-            isPartDestroy = true;
+            _isPartDestroy = true;
         }
     }
 
@@ -69,9 +67,9 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
     /// <returns></returns>
     public List<SkillBlock> GetSkillData()
     {
-        if (isPartDestroy)
+        if (_isPartDestroy)
         {
-            isPartDestroy = false;
+            _isPartDestroy = false;
 
             // 부위 파괴 시 한 턴간 전투 불가능
             return null;
@@ -79,7 +77,7 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
 
         List<SkillBlock> skillDatas = new List<SkillBlock>();
         SkillBlock sb;
-        foreach (var part in partsArray)
+        foreach (var part in _partsArray)
         {
             // 파괴된 부위는 전투 불가능
             if (part.IsDead)
@@ -95,7 +93,7 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
         }
         // 마지막 스킬은 본체로 고정
         sb = new SkillBlock();
-        sb.Character = bodyData;
+        sb.Character = _bodyData;
         skillDatas.Add(sb);
 
         // 강제로 스킬을 띄워야 하는 경우가 있으면 여기서 처리
@@ -103,5 +101,5 @@ public class EnemyBattleData : MonoBehaviour, IBattleFunction
         return skillDatas;
     }
 
-    public bool IsDead { get { return bodyData.IsDead; } }
+    public bool IsDead { get { return _bodyData.IsDead; } }
 }

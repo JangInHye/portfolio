@@ -1,5 +1,4 @@
 using Battle;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,6 +34,8 @@ public class BattleManager : MonoBehaviour
     {
         enemy = new EnemyBattleData();
         sinnersList = new List<CharacterBattleData>();
+
+        SkillDataHelper.Instance.Init();
 
         ResetBattle();
     }
