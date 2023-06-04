@@ -18,7 +18,6 @@ public class CharacterData : MonoBehaviour
     private int _mySpeed = 0;        // 속도
     public int Speed { get { return _mySpeed; } }
     private int _myHP = 0;            // 체력
-    private int _myMentality = 0;    // 정신력
 
     private int[] _staggerThreshold = new int[Battle.CharacterInfo.Num_Stagger];     // 흐트러짐 기준
     public int[] StaggerThreshold { get { return _staggerThreshold; } }
@@ -47,7 +46,6 @@ public class CharacterData : MonoBehaviour
         _mySpeed = random;
         random = Random.Range(Battle.CharacterInfo.Min_HP, Battle.CharacterInfo.Max_HP + 1);
         _myHP = random;
-        _myMentality = 0;
 
         // 최대 체력 기준으로 설정
         SetStagger(_myHP);
@@ -69,11 +67,12 @@ public class CharacterData : MonoBehaviour
     /// <returns></returns>
     public int GetDamage(AttackInfo damageInfo, int stagger, bool coinToss)
     {
-        int result = damageInfo.AttackerSkill.Damage(damageInfo.BeforeDamage, coinToss);
+        var data = damageInfo.AttackerSkill;
+        int result = data.Damage(damageInfo.BeforeDamage, coinToss);
 
         result = (int)(result                                                   // 데미지
-            * _attackTypeTolerance[(int)damageInfo.AttackerSkill.AttackType]        // 공격 타입 내성
-            * _sinAffinitiesTolerance[(int)damageInfo.AttackerSkill.SinAffinities]      // 공격 속성 내성
+            * _attackTypeTolerance[(int)data.AttackType]        // 공격 타입 내성
+            * _sinAffinitiesTolerance[(int)data.SinAffinities]      // 공격 속성 내성
             * Battle.CharacterInfo.StaggerAttackRatio[stagger]);                    // 흐트러짐 여부
 
         return result;

@@ -1,64 +1,77 @@
 using Battle;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class BattleManager : MonoBehaviour
 {
     // 적
-    EnemyBattleData enemy;
+    private EnemyBattleData _enemy;
 
     // 아군
-    List<CharacterBattleData> sinnersList;
-    int liveSinners;                // 살아있는 아군 수
+    private List<CharacterBattleData> _sinnersList;
+    private int _liveSinners;                // 살아있는 아군 수
 
     // 아군의 전투 횟수가 늘어날 수 있으니 List로 관리
-    List<SkillBlock> mySkills = new List<SkillBlock>();
-    List<SkillBlock> enemySkills = new List<SkillBlock>();
+    private List<SkillBlock> _mySkills = new List<SkillBlock>();
+    private List<SkillBlock> _enemySkills = new List<SkillBlock>();
 
-    List<AttackInfo> attackList;
-    private AttackInfo GetAttackInfo(CharacterBattleData attacker)
+    private EBattleState _eBattleState = EBattleState.None;
+
+    private List<AttackInfo> _attackList;
+    private AttackInfo GetAttackInfo(CharacterBattleData attacker, int attackerIndex)
     {
-        foreach (var atk in attackList)
+        int index = 0;
+        foreach (var atk in _attackList)
         {
+            if (index++ <= attackerIndex) break;
+
             if (atk.Attacker == attacker)
             {
                 return atk;
             }
         }
-        return new AttackInfo();
-    }
 
-    EBattleState eBattleState = EBattleState.None;
+        return null;
+    }
 
     private void Awake()
     {
-        enemy = new EnemyBattleData();
-        sinnersList = new List<CharacterBattleData>();
+        _enemy = new EnemyBattleData();
+        _sinnersList = new List<CharacterBattleData>();
 
         SkillDataHelper.Instance.Init();
 
         ResetBattle();
     }
 
+
+    /// <summary>
+    /// 초기화
+    /// </summary>
     private void ResetBattle()
     {
-        enemy.Init();
+        _enemy.Init();
 
         for (int i = 0; i < 5; i++)         // 5명 고정
         {
-            sinnersList[i].Init();
+            _sinnersList[i].Init();
         }
 
-        liveSinners = sinnersList.Count;
+        _liveSinners = _sinnersList.Count;
 
         ChangeState(EBattleState.StartTurn);
     }
 
+    /// <summary>
+    /// 전투 상태 교체
+    /// </summary>
+    /// <param name="state"></param>
     private void ChangeState(EBattleState state)
     {
-        eBattleState = state;
+        _eBattleState = state;
 
-        switch (eBattleState)
+        switch (_eBattleState)
         {
             case EBattleState.None:
                 break;
@@ -89,86 +102,93 @@ public class BattleManager : MonoBehaviour
     /// </summary>
     private void StartTurn()
     {
-        enemy.StartTurn();
-        foreach (var sinner in sinnersList)
+        _enemy.StartTurn();
+        foreach (var sinner in _sinnersList)
         {
             sinner.StartTurn();
-            mySkills.Add(sinner.GetSkillData());
+            _mySkills.Add(sinner.GetSkillData());
         }
 
-        enemySkills = enemy.GetSkillData();
+        _enemySkills = _enemy.GetSkillData();
 
         // 적의 공격대상 지정
-        foreach (var eSkill in enemySkills)
+        foreach (var eSkill in _enemySkills)
         {
-            // 해당 부위 공격만 가능하도록 남겨둔다.
+            // 공격을 못하는 상태
             if (eSkill.Skill == null) continue;
 
-            int rand = Random.Range(0, liveSinners);
-            AddAttackInfo(eSkill.Character, sinnersList[rand], eSkill.Skill[0], eSkill.Character.CurSpeed);
+            int rand = Random.Range(0, _liveSinners);
+            AddAttackInfo(eSkill, _mySkills[rand], eSkill.Character.CurSpeed);
         }
 
         ChangeState(EBattleState.WaitCommand);
     }
-
-    private void AddAttackInfo(CharacterBattleData attacker, CharacterBattleData victim, 
-        SkillData attackerSkill, int speed, SkillData victimSkill = null)
+    
+    /// <summary>
+    /// 공격 추가
+    /// </summary>
+    /// <param name="attackerSkill"></param>
+    /// <param name="victimSkill"></param>
+    /// <param name="speed"></param>
+    /// <param name="aSkillIndex"></param>
+    /// <param name="vSkillIndex"></param>
+    private void AddAttackInfo(SkillBlock attackerSkill, SkillBlock victimSkill,
+                                    int speed, int aSkillIndex = 0, int vSkillIndex = -1)
     {
         AttackInfo atkInfo = new AttackInfo();
-        atkInfo.Attacker = attacker;
-        atkInfo.Victim = victim;
-        atkInfo.AttackerSkill = attackerSkill;
-        atkInfo.VictimSkill = victimSkill;
+        atkInfo.Attacker = attackerSkill.Character;
+        atkInfo.Victim = victimSkill.Character;
+        atkInfo.AttackerSkill = attackerSkill.Skill[aSkillIndex];
+        atkInfo.VictimSkill = vSkillIndex == -1 ? null : victimSkill.Skill[vSkillIndex];
 
-        atkInfo.BeforeDamage = attackerSkill.DefaultDamage;
-        atkInfo.CoinCount = attackerSkill.CoinCount;
+        atkInfo.BeforeDamage = attackerSkill.Skill[aSkillIndex].DefaultDamage;
+        atkInfo.CoinCount = attackerSkill.Skill[aSkillIndex].CoinCount;
         atkInfo.Speed = speed;
 
-        attackList.Add(atkInfo);
+        _attackList.Add(atkInfo);
+    }
+
+    /// <summary>
+    /// 공격 정보 리스트 정리
+    /// </summary>
+    private void SortAttackInfoList()
+    {
+        int index = 0;
+        // 적이 공격을 할 경우
+        foreach (var attackInfo in _attackList)
+        {
+            // 공격대상이 공격중인 데이터가 기존에 있다면 가져온다.
+            var beforeAtkInfo = GetAttackInfo(attackInfo.Victim, index++);
+
+            if (beforeAtkInfo.VictimSkill != null)
+            {
+                int attackerSpeed = attackInfo.Attacker.CurSpeed;
+                int victimSpeed = attackInfo.Victim.CurSpeed;
+                // 같은 속도라면 본인에게 오는 공격만 합 가능
+                // 아군의 속도가 더 높을 경우 적의 공격과 합 진행
+                if ((attackerSpeed == victimSpeed && beforeAtkInfo.Victim == attackInfo.Attacker)
+                    || attackerSpeed > victimSpeed)
+                {
+                    // 기존에 있던 공격 대상을 바꾼다.
+                    // 공격 명령 순서대로기 때문에 나중에 명령한 공격이 덮어씌우는 형식
+                    beforeAtkInfo.Victim = attackInfo.Attacker;
+
+                    attackInfo.Speed = victimSpeed;
+                }
+            }
+        }
     }
 
     /// <summary>
     /// 스킬 지정
     /// </summary>
-    public void SkillCommand(CharacterBattleData attacker, SkillBlock victim, SkillData skill)
+    public void SkillCommand(SkillBlock attacker, SkillBlock victim, SkillData skill)
     {
-        if (eBattleState != EBattleState.WaitCommand) return;
+        if (_eBattleState != EBattleState.WaitCommand) return;
 
-        AttackInfo beforeAtkInfo = new AttackInfo();
-
-        bool isDuel = false;
-        // 적이 공격을 할 경우
-        if (victim.Skill != null && victim.Skill.Length > 0)
-        {
-            beforeAtkInfo = GetAttackInfo(victim.Character);
-            if (beforeAtkInfo.Attacker != null)
-            {
-                // 같은 속도라면 본인에게 오는 공격만 합 가능
-                if (attacker.CurSpeed == victim.Character.CurSpeed
-                    && beforeAtkInfo.Victim == attacker)
-                {
-                    isDuel = true;
-                }
-                // 아군의 속도가 더 높을 경우 적의 공격과 합 진행
-                else if (attacker.CurSpeed > victim.Character.CurSpeed)
-                {
-                    isDuel = true;
-                }
-            }
-
-            // 합 진행
-            if (isDuel)
-            {
-                // 기존에 있던 공격 대상을 바꾼다.
-                beforeAtkInfo.Victim = attacker;
-                beforeAtkInfo.VictimSkill = skill;
-            }
-        }
-        // 합을 진행할 경우 낮은 속도 기준으로 공격이 진행된다.
-        int speed = isDuel ? Mathf.Min(attacker.CurSpeed, victim.Character.CurSpeed)
-                                               : attacker.CurSpeed;
-
-        AddAttackInfo(attacker, victim.Character, skill, speed, beforeAtkInfo.AttackerSkill);
+        // 일단 공격 등록 후 정리를 한다.
+        AddAttackInfo(attacker, victim, attacker.Character.CurSpeed, skill.Index);
+        SortAttackInfoList();
     }
 
     /// <summary>
@@ -176,10 +196,10 @@ public class BattleManager : MonoBehaviour
     /// </summary>
     public void AttackCommand()
     {
-        if (eBattleState != EBattleState.WaitCommand) return;
+        if (_eBattleState != EBattleState.WaitCommand) return;
 
         // 공격할 대상이 정해지지 않은 아군이 있다면 아직 공격을 시작할 수 없다.
-        foreach (var skill in mySkills)
+        foreach (var skill in _mySkills)
         {
             if (skill.IsAttacked == false) return;
         }
@@ -207,27 +227,28 @@ public class BattleManager : MonoBehaviour
     /// </summary>
     private void EndTurn()
     {
-        enemy.EndTurn();
-        foreach (var sinner in sinnersList)
+        _enemy.EndTurn();
+        foreach (var sinner in _sinnersList)
         {
             sinner.EndTurn();
         }
 
         // 사망 체크
-        if (enemy != null && enemy.IsDead)
+        if (_enemy != null && _enemy.IsDead)
         {
             // 승리
             ChangeState(EBattleState.Victory);
         }
-        else if (sinnersList != null)
+        else if (_sinnersList != null)
         {
-            sinnersList.Sort(SortSinners);
-            for (int i = liveSinners - 1; i > -1; i--)
+            // 정렬 후 살아있는 캐릭터만 사망 체크
+            _sinnersList.Sort(SortSinners);
+            for (int i = _liveSinners - 1; i > -1; i--)
             {
-                if (sinnersList[i].IsDead) { liveSinners--; }
+                if (_sinnersList[i].IsDead) { _liveSinners--; }
             }
 
-            if (liveSinners <= 0)
+            if (_liveSinners <= 0)
             {
                 // 패배
                 ChangeState(EBattleState.Defeat);
@@ -235,7 +256,7 @@ public class BattleManager : MonoBehaviour
         }
 
         // 승리나 패배 했을 경우 전투를 종료한다.
-        if (eBattleState != EBattleState.EndTurn)
+        if (_eBattleState != EBattleState.EndTurn)
         {
             // 결과 노출 후에 초기화
             return;

@@ -62,7 +62,7 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
     public void Damaged(AttackInfo damage, int partIdx = 0)
     {
         // 속성 내성 적용
-        _curHP -= _characterData.GetDamage(damage, _staggerIdx, CoinToss);
+        _curHP -= _characterData.GetDamage(damage, _curStaggerCount, CoinToss);
 
         // 디버프나 추가 데미지가 있다면 여기서 적용
 
