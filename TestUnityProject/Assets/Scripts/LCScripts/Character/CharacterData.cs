@@ -1,6 +1,9 @@
 using Battle;
 using UnityEngine;
 
+/// <summary>
+/// 원래라면 시트로 관리해야하는 데이터
+/// </summary>
 public class CharacterData : MonoBehaviour
 {
     // 타입 내성
@@ -15,9 +18,9 @@ public class CharacterData : MonoBehaviour
         return SkillDataHelper.Instance.GetSkillData(idx);
     }
 
-    private int _mySpeed = 0;        // 속도
+    private int _mySpeed = 0;        // 기본 속도
     public int Speed { get { return _mySpeed; } }
-    private int _myHP = 0;            // 체력
+    private int _myHP = 0;            // 최대 체력
 
     private int[] _staggerThreshold = new int[Battle.CharacterInfo.Num_Stagger];     // 흐트러짐 기준
     public int[] StaggerThreshold { get { return _staggerThreshold; } }

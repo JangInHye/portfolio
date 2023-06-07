@@ -1,5 +1,3 @@
-using System;
-
 namespace Battle
 {
     // 공격 타입
@@ -37,7 +35,7 @@ namespace Battle
     }
 
     // 캐릭터 데이터
-    class CharacterInfo
+    struct CharacterInfo
     {
         public const int Num_Type = 3;
         public const int Num_Sin = 7;
@@ -65,22 +63,25 @@ namespace Battle
     /// </summary>
     public class AttackInfo
     {
-        public CharacterBattleData Attacker;
-        public CharacterBattleData Victim;
-        public SkillData AttackerSkill;
-        public SkillData VictimSkill;
+        public SkillBlock Attacker;
+        public SkillBlock Victim;
+        public int AttackSkillIndex;
+        public int VictimSkillIndex;
+
+        public SkillData AttackerSkill
+        {
+            get { return Attacker.Skill[AttackSkillIndex]; }
+        }
+        public SkillData VictimSkill
+        {
+            get { return VictimSkillIndex == -1 ? null : Victim.Skill[VictimSkillIndex]; }
+        }
+
         public int BeforeDamage;              // 이전 데미지 + 추가코인 데미지 계산
         public int CoinCount;                   // 공격횟수 줄어들 수도 있음.
         public int Speed;                        // 합을 진행하면 낮은 쪽을 따라감. 기본은 공격자 속도
     }
 
-    // 스킬 UI 표기 및 현재 턴의 사용할 수 있는 스킬 세팅
-    public struct SkillBlock
-    {
-        public SkillData[] Skill;
-        public CharacterBattleData Character;
-        public bool IsAttacked;         // 공격 명령이 내려졌는 지 체크
-    }
 
     // 전투에 필요한 함수
     interface IBattleFunction

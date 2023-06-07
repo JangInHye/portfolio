@@ -74,16 +74,20 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
         }
     }
 
+    public SkillData GetSkillData()
+    {
+        int rand = Random.Range(0, _characterData.SkillCount);
+        return _characterData.GetSkill(rand);
+    }
+
     /// <summary>
     /// 현재 턴에 사용할 스킬 묶음
     /// </summary>
     /// <param name="count"></param>
     /// <returns></returns>
-    public SkillBlock GetSkillData(int count = 2)
+    public SkillData[] GetSkillData(int count = 2)
     {
-        SkillBlock result = new SkillBlock();
-        result.Skill = new SkillData[count];
-        result.Character = this;
+        var result = new SkillData[count];
 
         // 패닉일 경우 공격 불가
         // 비어있는 스킬데이터의 예외처리 필요
@@ -91,8 +95,7 @@ public class CharacterBattleData : MonoBehaviour, IBattleFunction
 
         for (int i = 0; i < count; i++)
         {
-            int rand = Random.Range(0, _characterData.SkillCount);
-            result.Skill[i] = _characterData.GetSkill(rand);
+            result[i] = GetSkillData();
         }
 
         return result;

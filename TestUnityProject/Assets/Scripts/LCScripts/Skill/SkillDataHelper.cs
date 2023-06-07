@@ -12,7 +12,7 @@ public class SkillDataHelper
     }
 
     // 스킬 최대 갯수
-    public const int MAX_SKILL_COUNT = 10;
+    public const int MAX_SKILL_COUNT = 20;
 
     private SkillData[] _skillDataArray;
     public SkillData GetSkillData(int idx)

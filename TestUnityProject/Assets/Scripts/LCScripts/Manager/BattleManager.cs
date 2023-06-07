@@ -1,6 +1,5 @@
 using Battle;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class BattleManager : MonoBehaviour
@@ -9,8 +8,8 @@ public class BattleManager : MonoBehaviour
     private EnemyBattleData _enemy;
 
     // 아군
-    private List<CharacterBattleData> _sinnersList;
-    private int _liveSinners;                // 살아있는 아군 수
+    private List<CharacterBattleData> _myCharList;
+    private int _liveChars;                // 살아있는 아군 수
 
     // 아군의 전투 횟수가 늘어날 수 있으니 List로 관리
     private List<SkillBlock> _mySkills = new List<SkillBlock>();
@@ -26,7 +25,7 @@ public class BattleManager : MonoBehaviour
         {
             if (index++ <= attackerIndex) break;
 
-            if (atk.Attacker == attacker)
+            if (atk.Attacker.Character == attacker)
             {
                 return atk;
             }
@@ -38,7 +37,7 @@ public class BattleManager : MonoBehaviour
     private void Awake()
     {
         _enemy = new EnemyBattleData();
-        _sinnersList = new List<CharacterBattleData>();
+        _myCharList = new List<CharacterBattleData>();
 
         SkillDataHelper.Instance.Init();
 
@@ -55,10 +54,15 @@ public class BattleManager : MonoBehaviour
 
         for (int i = 0; i < 5; i++)         // 5명 고정
         {
-            _sinnersList[i].Init();
+            _myCharList[i].Init();
         }
 
-        _liveSinners = _sinnersList.Count;
+        _liveChars = _myCharList.Count;
+
+        foreach (var myChar in _myCharList)
+        {
+            _mySkills.Add(new SkillBlock(myChar, 2));
+        }
 
         ChangeState(EBattleState.StartTurn);
     }
@@ -103,13 +107,12 @@ public class BattleManager : MonoBehaviour
     private void StartTurn()
     {
         _enemy.StartTurn();
-        foreach (var sinner in _sinnersList)
+        foreach (var myChar in _myCharList)
         {
-            sinner.StartTurn();
-            _mySkills.Add(sinner.GetSkillData());
+            myChar.StartTurn();
         }
 
-        _enemySkills = _enemy.GetSkillData();
+        _enemySkills = _enemy.SetSkillData();
 
         // 적의 공격대상 지정
         foreach (var eSkill in _enemySkills)
@@ -117,7 +120,7 @@ public class BattleManager : MonoBehaviour
             // 공격을 못하는 상태
             if (eSkill.Skill == null) continue;
 
-            int rand = Random.Range(0, _liveSinners);
+            int rand = Random.Range(0, _liveChars);
             AddAttackInfo(eSkill, _mySkills[rand], eSkill.Character.CurSpeed);
         }
 
@@ -136,10 +139,10 @@ public class BattleManager : MonoBehaviour
                                     int speed, int aSkillIndex = 0, int vSkillIndex = -1)
     {
         AttackInfo atkInfo = new AttackInfo();
-        atkInfo.Attacker = attackerSkill.Character;
-        atkInfo.Victim = victimSkill.Character;
-        atkInfo.AttackerSkill = attackerSkill.Skill[aSkillIndex];
-        atkInfo.VictimSkill = vSkillIndex == -1 ? null : victimSkill.Skill[vSkillIndex];
+        atkInfo.Attacker = attackerSkill;
+        atkInfo.Victim = victimSkill;
+        atkInfo.AttackSkillIndex = aSkillIndex;
+        atkInfo.VictimSkillIndex = vSkillIndex;
 
         atkInfo.BeforeDamage = attackerSkill.Skill[aSkillIndex].DefaultDamage;
         atkInfo.CoinCount = attackerSkill.Skill[aSkillIndex].CoinCount;
@@ -158,12 +161,12 @@ public class BattleManager : MonoBehaviour
         foreach (var attackInfo in _attackList)
         {
             // 공격대상이 공격중인 데이터가 기존에 있다면 가져온다.
-            var beforeAtkInfo = GetAttackInfo(attackInfo.Victim, index++);
+            var beforeAtkInfo = GetAttackInfo(attackInfo.Victim.Character, index++);
 
             if (beforeAtkInfo.VictimSkill != null)
             {
-                int attackerSpeed = attackInfo.Attacker.CurSpeed;
-                int victimSpeed = attackInfo.Victim.CurSpeed;
+                int attackerSpeed = attackInfo.Attacker.Character.CurSpeed;
+                int victimSpeed = attackInfo.Victim.Character.CurSpeed;
                 // 같은 속도라면 본인에게 오는 공격만 합 가능
                 // 아군의 속도가 더 높을 경우 적의 공격과 합 진행
                 if ((attackerSpeed == victimSpeed && beforeAtkInfo.Victim == attackInfo.Attacker)
@@ -218,6 +221,8 @@ public class BattleManager : MonoBehaviour
         // 속도가 높아도 상대의 공격을 막는 경우라면 합을 진행한다.
         // 서로 공격하는 경우라면 합을 진행
 
+        // 기존에 사용한 스킬 제거 후 새로운 스킬 세팅
+
         // 공격이 전부 끝나면 턴 종료
         ChangeState(EBattleState.EndTurn);
     }
@@ -228,9 +233,9 @@ public class BattleManager : MonoBehaviour
     private void EndTurn()
     {
         _enemy.EndTurn();
-        foreach (var sinner in _sinnersList)
+        foreach (var myChar in _myCharList)
         {
-            sinner.EndTurn();
+            myChar.EndTurn();
         }
 
         // 사망 체크
@@ -239,16 +244,16 @@ public class BattleManager : MonoBehaviour
             // 승리
             ChangeState(EBattleState.Victory);
         }
-        else if (_sinnersList != null)
+        else if (_myCharList != null)
         {
             // 정렬 후 살아있는 캐릭터만 사망 체크
-            _sinnersList.Sort(SortSinners);
-            for (int i = _liveSinners - 1; i > -1; i--)
+            _myCharList.Sort(SortMyChars);
+            for (int i = _liveChars - 1; i > -1; i--)
             {
-                if (_sinnersList[i].IsDead) { _liveSinners--; }
+                if (_myCharList[i].IsDead) { _liveChars--; }
             }
 
-            if (_liveSinners <= 0)
+            if (_liveChars <= 0)
             {
                 // 패배
                 ChangeState(EBattleState.Defeat);
@@ -281,7 +286,7 @@ public class BattleManager : MonoBehaviour
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    private int SortSinners(CharacterBattleData a, CharacterBattleData b)
+    private int SortMyChars(CharacterBattleData a, CharacterBattleData b)
     {
         // 사망 판정 먼저
         if (a.IsDead) return 1;
